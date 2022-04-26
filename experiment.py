@@ -142,12 +142,12 @@ def estimate_gen_error(W_model, Z_test, Z):
 
 def plot_results(x_list, y_list, tkitz = True):
     """
-    Graphs the data generated from the experiment.
+    Graphs the data generated from the experiment, outputs both
+    a .png plot and tkitz file.
 
     Input:
     x_list = x axis points for the data in array -> [int/double]
-    ISMI_bound_est = ISMI bound data in array -> [double]
-    gen_error = the generilization estimate data in array -> [double]
+    y_list = ISMI bound data in array -> [["name1", [double]], ["name2", [double]], ["name3", [double]]]
     """
     
     fig, ax = plt.subplots(figsize=(6, 4))
@@ -169,31 +169,38 @@ def plot_results(x_list, y_list, tkitz = True):
     ax.grid(color='#f1f1f1')
     ax.legend()
     fig.tight_layout()
+    
     plt.show()
     plt.savefig("ExperimentResultsPlot2.png", dpi = 600)
     tikzplotlib.save(figure = fig,filepath="ExperimentResultsPlot2.tex", axis_width = "6", axis_height = "4")
-    #tikz_save("ExperimentResultsPlot2.tikz")
     plt.close()
     
 
-def write_to_csv(x_list, ISMI_bound_est, gen_error):
+def write_to_xlsx(x_list, y_list):
+    """
+    Outputs the data to a simple excel file. 
+    
+    Input:
+    x_list = x axis points for the data in array -> [int/double]
+    y_list = ISMI bound data in array -> [["name1", [double]], ["name2", [double]], ["name3", [double]]]
+    """
+
     workbook = xlsxwriter.Workbook('experimentResults.xlsx', {'nan_inf_to_errors': True})
     worksheet = workbook.add_worksheet()
-    data = [x_list, ISMI_bound_est, gen_error]
-    worksheet.write(0, 0, 'Number of samples')
-    worksheet.write(0, 1, 'ISMI')
-    worksheet.write(0, 2, 'Gen Error')
+    y_list.insert(0, ["Number of sample", x_list])
 
-    for column in range(3):
+    for column in range(len(y_list)):
+        worksheet.write(0, column, y_list[column][0])
         for row in range(1,len(x_list)+1):
-            worksheet.write(row, column, data[column][row-1])
+            worksheet.write(row, column, y_list[column][1][row-1])
     workbook.close()
 
 
 def experiment():
     """
     Function that executes all functions needed to perform the neccessary
-    calculations.  
+    calculations to replicate the experiment. The parameters can easily be 
+    changed down below.  
     """
     
     # experiment parameters
@@ -237,9 +244,9 @@ def experiment():
 
     # result from original authors
     ISMI_org = [0.284, 0.237, 0.201, 0.187, 0.166, 0.148, 0.142, 0.129, 0.134, 0.110, 0.110, 0.1, 0.095, 0.094, 0.090, 0.090, 0.09, 0.09]
-    
-    plot_results(x_list, [["ISMI", ISMI_org[0:len(ISMI_bound_est)]], ["ISMI rep" , ISMI_bound_est], ["Gen error", gen_error]])
-    write_to_csv(x_list, ISMI_bound_est, gen_error)
+    data = [["ISMI", ISMI_org[0:len(ISMI_bound_est)]], ["ISMI rep" , ISMI_bound_est], ["Gen error", gen_error]]
+    plot_results(x_list, data)
+    write_to_xlsx(x_list, data)
 
 
 if __name__ == "__main__":
